@@ -8,5 +8,8 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "cppctamber",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "axios": "^1.6.3"
+  }
 }
