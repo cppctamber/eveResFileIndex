@@ -9,7 +9,7 @@ import child_process from "child_process";
  * @param {String} filePath
  * @returns {Promise<any>}
  */
-export async function readJSON(filePath){
+export async function readJSON(filePath) {
     return JSON.parse(await readFile(filePath, 'utf8'));
 }
 
@@ -18,9 +18,9 @@ export async function readJSON(filePath){
  * @param {String} filePath
  * @param {Object} data
  * @param {Function} [replacer]
- * @paran {Number} [spacing]
+ * @param {Number} [spacing]
  */
-export async function writeJSON(filePath, data, replacer, spacing){
+export async function writeJSON(filePath, data, replacer, spacing) {
     await writeFile(filePath, JSON.stringify(data, replacer, spacing))
 }
 
@@ -90,4 +90,64 @@ export function removeTrailingSlash(baseURL) {
     return baseURL.endsWith("/") ? baseURL.substring(0, baseURL.length - 1) : baseURL;
 }
 
+/**
+ * Simple cache class
+ * Todo: Add a timer
+ */
+export class Cache {
 
+    constructor() {
+
+        const map = new Map();
+
+        /**
+         * Clears the cache
+         */
+        this.clear = function () {
+            map.clear();
+        }
+
+        /**
+         * Deletes a key
+         * @param {*} key
+         */
+        this.delete = function(key){
+            map.delete(key);
+        }
+
+        /**
+         * Checks if the cache has a given key
+         * @param {*} key
+         * @returns {boolean}
+         */
+        this.has = function (key) {
+            return map.has(key);
+        }
+
+        /**
+         * Gets a key
+         * @param {*} key
+         * @returns {Promise<*>}
+         */
+        this.get = async function (key) {
+            if (!this.has(key)) throw new Error(`Invalid key: ${key}`);
+            return map.get(key);
+        }
+
+        /**
+         * Sets a key
+         * @param {*} key
+         * @param {Promise} value
+         * @param {Number} ttl
+         * @returns {*}
+         */
+        this.set = function (key, value, ttl) {
+            if (!(value instanceof Promise)) {
+                value = new Promise((res) => res(value));
+            }
+            map.set(key, value);
+            return value;
+        }
+
+    }
+}

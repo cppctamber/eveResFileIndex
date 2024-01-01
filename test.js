@@ -1,10 +1,12 @@
-import {writeJSON, readJSON, exists} from "./src/utils.js";
-import path from "path";
+import {getLatestClientFileIndexes, utils} from "./src";
 import {fileURLToPath} from "url";
-import {getLatestClientFileIndexes} from "./src/index.js";
+import path from "path";
 
+// Get relative directory name
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+// Set out directory
 const outDir = path.join(__dirname, "out");
+// Get arguments
 const [client, eveSharedCache, forceUpdateCache] = process.argv.slice(2);
 
 /**
@@ -24,30 +26,36 @@ async function main(client, eveSharedCache, forceUpdateCache) {
         console.log(`Client: ${client}`);
     }
 
-    return getLatestClientFileIndexes(client, eveSharedCache, {
+    const localStorageOptions = {
         read: async build => {
             const localCacheFilePath = path.join(outDir, `${build}_fileindex.json`);
-            if (await exists(localCacheFilePath)) {
+            if (await utils.exists(localCacheFilePath)) {
                 try {
-                    const result = readJSON(localCacheFilePath);
-                    console.log(`${build} > Retrieved from cache...`);
+                    const result = await utils.readJSON(localCacheFilePath);
+                    console.log(`${build} > Retrieved from local storage...`);
                     return result;
                 } catch (err) {
-                    console.log(`${build} > Failed to retrieve from cache...`);
+                    console.log(`${build} > Failed to retrieve from local storage...`);
                 }
             }
         },
         write: async (build, data) => {
             const localCacheFilePath = path.join(outDir, `${build}_fileindex.json`);
-            if (await exists(localCacheFilePath)) {
-                console.log(`${build} > Overwriting cache...`);
+            if (await utils.exists(localCacheFilePath)) {
+                console.log(`${build} > Overwriting local storage...`);
             } else {
-                console.log(`${build} > Stored in cache...`);
+                console.log(`${build} > Stored in local storage...`);
             }
-            await writeJSON(localCacheFilePath, data, null, 4);
+            return utils.writeJSON(localCacheFilePath, data, null, 4);
         },
         force: forceUpdateCache
-    })
+    }
+
+    // Test storing locally
+    await getLatestClientFileIndexes(client, eveSharedCache, localStorageOptions);
+    // Test getting from in memory cache
+    return getLatestClientFileIndexes(client, eveSharedCache, localStorageOptions);
+
 }
 
 main(client, eveSharedCache, forceUpdateCache)
